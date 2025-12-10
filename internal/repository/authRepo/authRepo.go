@@ -12,6 +12,7 @@ const (
 	INSERT_USER         = "INSERT INTO users(email, password) VALUES(?, ?) "
 	COUNT_USER_BY_EMAIL = "SELECT COUNT(EMAIL) FROM users WHERE EMAIL = ?"
 	FIND_USER           = "SELECT id, email , password, created_at FROM users WHERE email = ?"
+	SELECT_USER         = "SELECT * FROM users WHERE id = ?"
 )
 
 type AuthRepo struct {
@@ -67,4 +68,15 @@ func (r *AuthRepo) GetUserByEmail(ctx context.Context, email string) (*models.Us
 		return nil, err
 	}
 	return &row, nil
+}
+
+func (r *AuthRepo) Profile(ctx context.Context, id int) (*models.User, error) {
+	var userM models.User
+	user := r.db.QueryRow(SELECT_USER, id)
+
+	if err := user.Scan(&userM.ID, &userM.Email, &userM.Password, &userM.CreatedAt); err != nil {
+		return nil, err
+	}
+
+	return &userM, nil
 }

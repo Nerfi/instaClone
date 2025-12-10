@@ -2,8 +2,10 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
+	usrMiddle "github.com/Nerfi/instaClone/internal/handlers/middlewares"
 	"github.com/Nerfi/instaClone/internal/models/authUser"
 	authsrvc "github.com/Nerfi/instaClone/internal/services/auth"
 	"github.com/gorilla/csrf"
@@ -87,5 +89,26 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{
 		"message": "Login successful",
 	})
+
+}
+
+func (h *AuthHanlders) Profile(w http.ResponseWriter, r *http.Request) {
+	userId, ok := usrMiddle.GetUserIdFromContext(r.Context())
+	fmt.Println("user id", userId) // works well
+	if !ok {
+		http.Error(w, "no user found", http.StatusUnauthorized)
+		return
+	}
+	// hablamos con el servicio para extraer los datos del usuario
+	usrPfl, err := h.authservice.Profile(r.Context(), userId)
+	fmt.Println("user profile", usrPfl) // nil
+	if err != nil {
+		http.Error(w, "user not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(usrPfl)
 
 }

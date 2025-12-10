@@ -65,3 +65,12 @@ func (svc *AuthSrv) LoginUser(ctx context.Context, body *models.AuthReqBody) (*m
 	return tokens, nil
 
 }
+
+func (svc *AuthSrv) Profile(ctx context.Context, userId int) (*models.User, error) {
+	// buscamos al usuario en la bbdd en base al id pasado
+	usr, err := svc.authrepo.Profile(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+	return usr, nil
+}

@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -50,4 +51,34 @@ func GetAuthTokens(user *models.User, auth *jwtauth.JWTAuth) (*models.TokenRespo
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
+}
+
+func ValidateToken(tokenStr string, auth *jwtauth.JWTAuth) (int, error) {
+	// decode el token
+	token, err := auth.Decode(tokenStr)
+	if err != nil {
+		return 0, fmt.Errorf("token inválido: %w", err)
+	}
+
+	// verificar la expiracion
+	if token.Expiration().Before(time.Now()) {
+		return 0, fmt.Errorf("token expirado")
+	}
+
+	// extraer el user_id de los claims
+	claims, err := token.AsMap(context.Background())
+	if err != nil {
+		return 0, fmt.Errorf("error extraendo los claims: %w", err)
+	}
+
+	// convertir el user_id a int (puede venir como float)
+	userID, ok := claims["user_id"].(float64)
+	if !ok {
+		return 0, fmt.Errorf("error convertiendo el user_id a int")
+	}
+
+	// de momento solo extraemos el user_id de los claims , pero deberemos sacar mas cosas para futuro
+
+	return int(userID), nil
+
 }

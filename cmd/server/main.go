@@ -12,6 +12,7 @@ import (
 	"github.com/Nerfi/instaClone/internal/config"
 	authHndlr "github.com/Nerfi/instaClone/internal/handlers/auth"
 	health "github.com/Nerfi/instaClone/internal/handlers/healthCheck"
+	"github.com/Nerfi/instaClone/internal/handlers/middlewares"
 	authRepo "github.com/Nerfi/instaClone/internal/repository/authRepo"
 	authSrv "github.com/Nerfi/instaClone/internal/services/auth"
 	"github.com/joho/godotenv"
@@ -55,6 +56,11 @@ func main() {
 	// aplicar el CSRF
 	//TODO descomentar csrf logic para probarla cuando tengamos un endpoint valido
 	//csrfMiddleware := security.NewCSRF([]byte(config.Envs.CSRF_SECRET_KEY), false)(mux)
+
+	// chain middleware
+	chain := middlewares.ChainMiddleware(middlewares.AuthMiddleware, middlewares.OwnerOnlyMiddleware)
+	// rutas protegidas
+	mux.Handle("/profile/{id}", chain(http.HandlerFunc(authHandlers.Profile)))
 
 	// custom server config
 
