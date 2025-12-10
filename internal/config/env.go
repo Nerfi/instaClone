@@ -26,6 +26,7 @@ type AppEnvs struct {
 	HTTP_COOKIE_SECURE        bool
 	HTTP_ACCESS_TOKEN_EXPIRE  int
 	HTTP_REFRESH_TOKEN_EXPIRE int
+	CSRF_SECRET_KEY           string
 }
 
 // ParseEnvs parses the environment variables and stores them in the AppEnvs struct.
@@ -38,11 +39,12 @@ func ParseEnvs() (*AppEnvs, error) {
 	var err error
 	envOnce.Do(func() {
 		Envs = &AppEnvs{
-			ENV:            os.Getenv("ENV"),
-			WEB_URL:        os.Getenv("WEB_URL"),
-			JWT_SECRET_KEY: os.Getenv("JWT_SECRET_KEY"),
-			DB_DRIVER:      os.Getenv("DB_DRIVER"),
-			DB_URL:         os.Getenv("DB_URL"),
+			ENV:             os.Getenv("ENV"),
+			WEB_URL:         os.Getenv("WEB_URL"),
+			JWT_SECRET_KEY:  os.Getenv("JWT_SECRET_KEY"),
+			DB_DRIVER:       os.Getenv("DB_DRIVER"),
+			DB_URL:          os.Getenv("DB_URL"),
+			CSRF_SECRET_KEY: os.Getenv("CSRF_SECRET_KEY"),
 		}
 
 		if Envs.ENV == "" || Envs.WEB_URL == "" || Envs.JWT_SECRET_KEY == "" || Envs.DB_DRIVER == "" || Envs.DB_URL == "" {

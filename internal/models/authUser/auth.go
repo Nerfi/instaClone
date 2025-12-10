@@ -5,7 +5,7 @@ import "time"
 type User struct {
 	ID        int       `json:"id"`
 	Email     string    `json:"email"`
-	Password  string    `json:"password"` //will never be encoded
+	Password  string    `json:"-"` //will never be encoded
 	CreatedAt time.Time `json:"created_at"`
 }
 type AuthReqBody struct {

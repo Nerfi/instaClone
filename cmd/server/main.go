@@ -52,11 +52,16 @@ func main() {
 	hc := health.NewHealthCheck()
 	mux.HandleFunc("/health", hc.Check)
 
+	// aplicar el CSRF
+	//TODO descomentar csrf logic para probarla cuando tengamos un endpoint valido
+	//csrfMiddleware := security.NewCSRF([]byte(config.Envs.CSRF_SECRET_KEY), false)(mux)
+
 	// custom server config
 
 	s := &http.Server{
-		Addr:           ":8080",
-		Handler:        mux,
+		Addr:    ":8080",
+		Handler: mux,
+		//Handler:        csrfMiddleware,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,

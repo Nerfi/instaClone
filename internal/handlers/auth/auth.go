@@ -6,6 +6,7 @@ import (
 
 	"github.com/Nerfi/instaClone/internal/models/authUser"
 	authsrvc "github.com/Nerfi/instaClone/internal/services/auth"
+	"github.com/gorilla/csrf"
 )
 
 type AuthHanlders struct {
@@ -38,6 +39,7 @@ func (h *AuthHanlders) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// devolviendo en caso de que todo haya ido bien
+	w.Header().Set("X-CSRF-Token", csrf.Token(r))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(user)

@@ -33,7 +33,7 @@ func (r *AuthRepo) CreateUser(ctx context.Context, user *models.User) (int64, er
 	}
 	// si row != 0 es que ya hay un usuario con ese emial
 	if row != 0 {
-		fmt.Errorf("email already exists")
+		return 0, fmt.Errorf("email already exists")
 	}
 
 	// insertamos el usuario en la bbdd con la password hasheada
