@@ -55,7 +55,7 @@ func (svc *AuthSrv) LoginUser(ctx context.Context, body *models.AuthReqBody) (*m
 		return nil, fmt.Errorf("invalid credentials-->", err)
 	}
 
-	// add tokens and set it into cookies
+	// add tokens(refresh , access) and set it into cookies
 	tokens, err := jwt.GetAuthTokens(dbUser, svc.auth)
 	if err != nil {
 		fmt.Println(err, "error generating tokens")
