@@ -1,0 +1,20 @@
+# Imagen de desarrollo con Air
+FROM golang:1.25-alpine
+
+WORKDIR /app
+
+# Copiamos los archivos de dependencias
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copiamos el resto del código
+COPY . .
+
+# Instalamos Air desde el repositorio oficial
+RUN go install github.com/air-verse/air@latest
+
+# Exponemos el puerto de tu servidor
+EXPOSE 8080
+
+# Arrancamos con Air y el archivo de configuración
+CMD ["air", "-c", ".air.toml"]
