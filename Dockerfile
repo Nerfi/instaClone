@@ -27,7 +27,7 @@ RUN go install github.com/air-verse/air@latest
 
 COPY .env ./
 
-EXPOSE 8080
+EXPOSE 8081
 #
 
 #comandos de arranque   ejecutmaos el binario creado en la fase de build que hemos llamado server -o server(este es el nombre del binaro)

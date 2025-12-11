@@ -65,7 +65,7 @@ func main() {
 	// custom server config
 
 	s := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":8081",
 		Handler: mux,
 		//Handler:        csrfMiddleware,
 		ReadTimeout:    10 * time.Second,
