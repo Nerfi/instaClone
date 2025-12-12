@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	resModel "github.com/Nerfi/instaClone/internal/models"
 	"github.com/Nerfi/instaClone/internal/models/authUser"
 	authRepo "github.com/Nerfi/instaClone/internal/repository/authRepo"
 	jwt "github.com/Nerfi/instaClone/pkg/jwt"
@@ -57,12 +58,28 @@ func (svc *AuthSrv) LoginUser(ctx context.Context, body *models.AuthReqBody) (*m
 
 	// add tokens(refresh , access) and set it into cookies
 	tokens, err := jwt.GetAuthTokens(dbUser, svc.auth)
+
 	if err != nil {
 		fmt.Println(err, "error generating tokens")
 		return nil, err
 	}
 
+	// guardamos el refresh token en la base de datos
+	expiresAt := time.Now().Add(7 * 24 * time.Hour)
+	if err = svc.authrepo.InsertRefreshToken(ctx, tokens.RefreshToken, dbUser.ID, expiresAt); err != nil {
+		return nil, err
+	}
+
 	return tokens, nil
+
+}
+
+func (svc *AuthSrv) LogOutUser(ctx context.Context, userID int) (*resModel.Response, error) {
+	usrRes, err := svc.authrepo.LogOutUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return usrRes, nil
 
 }
 

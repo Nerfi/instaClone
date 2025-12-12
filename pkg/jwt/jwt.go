@@ -42,43 +42,56 @@ func GetAuthTokens(user *models.User, auth *jwtauth.JWTAuth) (*models.TokenRespo
 	}
 
 	// refresh token, expires in 7 days
-	refreshToken, err := GenerateToken(user, auth, time.Now().Add(7*24*time.Hour).Unix())
+	refreshTokenExpire := time.Now().Add(7 * 24 * time.Hour).Unix()
+
+	refreshToken, err := GenerateToken(user, auth, refreshTokenExpire)
 	if err != nil {
 		return nil, err
 	}
-
+	
 	return &models.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 	}, nil
 }
 
-func ValidateToken(tokenStr string, auth *jwtauth.JWTAuth) (int, error) {
+// UserClaims este type es temporal, mejorarlo para añadir mas datos del usuario en el context
+type UserClaims struct {
+	UserID int    `json:"user_id"`
+	Email  string `json:"email"`
+}
+
+func ValidateToken(tokenStr string, auth *jwtauth.JWTAuth) (*UserClaims, error) {
 	// decode el token
 	token, err := auth.Decode(tokenStr)
 	if err != nil {
-		return 0, fmt.Errorf("token inválido: %w", err)
+		return nil, fmt.Errorf("token inválido: %w", err)
 	}
 
 	// verificar la expiracion
 	if token.Expiration().Before(time.Now()) {
-		return 0, fmt.Errorf("token expirado")
+		return nil, fmt.Errorf("token expirado")
 	}
 
 	// extraer el user_id de los claims
 	claims, err := token.AsMap(context.Background())
+	fmt.Println(claims, "CLAIMS ")
 	if err != nil {
-		return 0, fmt.Errorf("error extraendo los claims: %w", err)
+		return nil, fmt.Errorf("error extraendo los claims: %w", err)
 	}
 
 	// convertir el user_id a int (puede venir como float)
 	userID, ok := claims["user_id"].(float64)
+	// extraemos el email de los claims
+	userEmail, ok := claims["email"].(string)
+	// rellenamos el struct con los datos del token
+	usr := &UserClaims{UserID: int(userID), Email: userEmail}
 	if !ok {
-		return 0, fmt.Errorf("error convertiendo el user_id a int")
+		return nil, fmt.Errorf("error convertiendo el user_id a int")
 	}
 
 	// de momento solo extraemos el user_id de los claims , pero deberemos sacar mas cosas para futuro
 
-	return int(userID), nil
+	return usr, nil
 
 }

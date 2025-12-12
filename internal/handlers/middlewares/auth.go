@@ -12,15 +12,15 @@ import (
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// get the token from cookie
-		cookie, err := r.Cookie("access_token") // aqui puede que tengamos un error al extraer el acces token , ya que dura poco
+		cookie, err := r.Cookie("access_token")
 		if err != nil {
-			http.Error(w, "no token found", http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 		tokenStr := cookie.Value
 
 		if tokenStr == "" {
-			http.Error(w, "no token found", http.StatusUnauthorized)
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
@@ -28,14 +28,17 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		auth := config.NewAppConfig().Auth
 		// validar el token
 
-		userID, err := security.ValidateToken(tokenStr, auth)
+		user, err := security.ValidateToken(tokenStr, auth)
+
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		}
 
-		// Agregar el userID al contexto
-		ctx := context.WithValue(r.Context(), "user_id", userID)
+		// Agregar el userID and email al contexto
+		// https://stackoverflow.com/questions/40379960/context-withvalue-how-to-add-several-key-value-pairs
+		ctx := context.WithValue(r.Context(), "user_id", user.UserID)
+		ctx = context.WithValue(ctx, "user_email", user.Email)
 
 		// Continuar con el siguiente handler
 		next.ServeHTTP(w, r.WithContext(ctx))

@@ -79,7 +79,7 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		Path:     "/",
+		Path:     "/auth/refresh",
 		MaxAge:   900, // 15 minutos
 	})
 
@@ -92,9 +92,49 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func (h *AuthHanlders) LogoutUser(w http.ResponseWriter, r *http.Request) {
+	// extraer el id del usuario del context
+	userId, ok := usrMiddle.GetUserIdFromContext(r.Context())
+	fmt.Println("user id", userId)
+	if !ok {
+		http.Error(w, "no user found", http.StatusUnauthorized)
+		return
+	}
+
+	resut, err := h.authservice.LogOutUser(r.Context(), userId)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// limpiamos las cookies de access_token y refresh_token
+	// https://stackoverflow.com/questions/27671061/how-to-delete-cookie
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+		MaxAge:   -1,
+	})
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/auth/refresh",
+		MaxAge:   -1,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resut)
+}
+
 func (h *AuthHanlders) Profile(w http.ResponseWriter, r *http.Request) {
 	userId, ok := usrMiddle.GetUserIdFromContext(r.Context())
-	fmt.Println("user id", userId) // works well
 	if !ok {
 		http.Error(w, "no user found", http.StatusUnauthorized)
 		return

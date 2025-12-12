@@ -4,3 +4,10 @@ CREATE TABLE IF NOT EXISTS users (
         password VARCHAR(255) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+CREATE TABLE IF NOT EXISTS refresh_tokens_table(
+  user_id INT NOT NULL,
+   token VARCHAR(255) NOT NULL,
+   expires_at TIMESTAMP NOT NULL,
+   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
