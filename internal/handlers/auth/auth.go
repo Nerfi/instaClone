@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	usrMiddle "github.com/Nerfi/instaClone/internal/handlers/middlewares"
+	ResModels "github.com/Nerfi/instaClone/internal/models"
 	"github.com/Nerfi/instaClone/internal/models/authUser"
 	authsrvc "github.com/Nerfi/instaClone/internal/services/auth"
 	"github.com/gorilla/csrf"
@@ -27,9 +28,7 @@ func (h *AuthHanlders) CreateUser(w http.ResponseWriter, r *http.Request) {
 	var bodyReq *models.AuthReqBody
 
 	if err := json.NewDecoder(r.Body).Decode(&bodyReq); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode("please provied valid input ")
+		ResModels.ResponseWithJSON(w, http.StatusBadRequest, "please provide valid input ")
 		return
 	}
 
@@ -41,19 +40,18 @@ func (h *AuthHanlders) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// devolviendo en caso de que todo haya ido bien
+
+	// TODO implemente csrf token
 	w.Header().Set("X-CSRF-Token", csrf.Token(r))
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(user)
+	ResModels.ResponseWithJSON(w, http.StatusCreated, user)
 
 }
 
 func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 	var bodyReq *models.AuthReqBody
 	if err := json.NewDecoder(r.Body).Decode(&bodyReq); err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode("please provied valid input ")
+		ResModels.ResponseWithJSON(w, http.StatusBadRequest, "please provide valid input ")
+
 		return
 	}
 
@@ -84,11 +82,7 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Devolver access token en el body
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "Login successful",
-	})
+	ResModels.ResponseWithJSON(w, http.StatusOK, "Login successful")
 
 }
 
@@ -128,9 +122,7 @@ func (h *AuthHanlders) LogoutUser(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resut)
+	ResModels.ResponseWithJSON(w, http.StatusOK, resut)
 }
 
 func (h *AuthHanlders) Profile(w http.ResponseWriter, r *http.Request) {
@@ -147,9 +139,7 @@ func (h *AuthHanlders) Profile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(usrPfl)
+	ResModels.ResponseWithJSON(w, http.StatusOK, usrPfl)
 
 }
 
@@ -196,10 +186,6 @@ func (h *AuthHanlders) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// response si todo ha ido bien
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{
-		"message": "tokens refreshed successfully",
-	})
+	ResModels.ResponseWithJSON(w, http.StatusOK, "tokens refreshed successfully")
 
 }
