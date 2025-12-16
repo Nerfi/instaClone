@@ -5,9 +5,12 @@ services:
       dockerfile: Dockerfile.dev
     restart: always
     ports:
-     - "8080:8080"
+     - "8081:8081"
     volumes:
       - .:/app
+    env_file: ".env"
+    networks:
+      - new
     depends_on:
       db:
         condition: service_healthy
@@ -18,9 +21,12 @@ services:
     restart: always
     ports:
       - "3306:3306"
+    networks:
+      - new
+    env_file: ".env"
     environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_DATABASE: instaClone #nombre de la bbdd que se creara
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE} #nombre de la bbdd que se creara
     volumes:
       - db_data:/var/lib/mysql #aqui se guardan los datos que generamos de bbdd
       - ./migrations:/docker-entrypoint-initdb.d
@@ -30,6 +36,22 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+  migrate:
+    image: migrate/migrate
+    networks:
+      - new
+    depends_on:
+       db:
+         condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    env_file: ".env"
+    command:
+      ["-path=/migrations", "-database=${DB_DRIVER}://${DB_URL}", "up"]
+    restart: on-failure
+    
 
 volumes:
   db_data:
+networks:
+   new:

@@ -14,7 +14,7 @@ COPY . .
 RUN go install github.com/air-verse/air@latest
 
 # Exponemos el puerto de tu servidor
-EXPOSE 8080
+EXPOSE 8081
 
 # Arrancamos con Air y el archivo de configuración
 CMD ["air", "-c", ".air.toml"]

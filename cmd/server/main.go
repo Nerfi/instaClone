@@ -12,6 +12,7 @@ import (
 	"github.com/Nerfi/instaClone/internal/config"
 	authHndlr "github.com/Nerfi/instaClone/internal/handlers/auth"
 	health "github.com/Nerfi/instaClone/internal/handlers/healthCheck"
+	"github.com/Nerfi/instaClone/internal/handlers/middlewares"
 	authRepo "github.com/Nerfi/instaClone/internal/repository/authRepo"
 	authSrv "github.com/Nerfi/instaClone/internal/services/auth"
 	"github.com/joho/godotenv"
@@ -47,6 +48,8 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/create", authHandlers.CreateUser)
 	mux.HandleFunc("/login", authHandlers.LoginUser)
+	mux.HandleFunc("/refresh", authHandlers.RefreshToken)
+	mux.Handle("/logout", middlewares.AuthMiddleware(http.HandlerFunc(authHandlers.LogoutUser)))
 
 	// healthCheck endpoint
 	hc := health.NewHealthCheck()
@@ -56,11 +59,20 @@ func main() {
 	//TODO descomentar csrf logic para probarla cuando tengamos un endpoint valido
 	//csrfMiddleware := security.NewCSRF([]byte(config.Envs.CSRF_SECRET_KEY), false)(mux)
 
+	// chain middleware
+	chain := middlewares.ChainMiddleware(middlewares.AuthMiddleware, middlewares.OwnerOnlyMiddleware)
+	// rutas protegidas
+	mux.Handle("/profile/{id}", chain(http.HandlerFunc(authHandlers.Profile)))
+
+	//securing headers in all requests coming through this router
+
+	secureMux := middlewares.SecurityHeaders(mux)
+
 	// custom server config
 
 	s := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
+		Addr:    ":8081",
+		Handler: secureMux,
 		//Handler:        csrfMiddleware,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
