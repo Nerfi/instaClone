@@ -64,11 +64,15 @@ func main() {
 	// rutas protegidas
 	mux.Handle("/profile/{id}", chain(http.HandlerFunc(authHandlers.Profile)))
 
+	//securing headers in all requests coming through this router
+
+	secureMux := middlewares.SecurityHeaders(mux)
+
 	// custom server config
 
 	s := &http.Server{
 		Addr:    ":8081",
-		Handler: mux,
+		Handler: secureMux,
 		//Handler:        csrfMiddleware,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
