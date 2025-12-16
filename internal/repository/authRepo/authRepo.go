@@ -17,7 +17,7 @@ const (
 	SELECT_USER                = "SELECT * FROM users WHERE id = ?"
 	INSERT_REFRESH_TOKEN       = "INSERT INTO refresh_tokens_table( user_id, token, expires_at) VALUES(?, ?, ?)"
 	DELETE_TOKEN_REFRESH_TABLE = "DELETE FROM refresh_tokens_table WHERE user_id = ?"
-	FIND_REFRESH_TOKEN         = "SELECT userd_id, expires_at FROM refresh_tokens_table WHERE token = ?"
+	FIND_REFRESH_TOKEN         = "SELECT user_id, expires_at FROM refresh_tokens_table WHERE token = ?"
 	DELETE_SPECIFIC_TOKEN      = "DELETE FROM refresh_tokens_table WHERE token = ?"
 )
 
@@ -114,16 +114,23 @@ func (r *AuthRepo) GetRefreshToken(ctx context.Context, token string) (int, time
 		return 0, time.Time{}, err
 	}
 
-	// verificar si el token ha expirado
-	// devuelve true si el instante actual es posterior al valor expiresAt
-	if time.Now().After(expiresAt) {
-		return 0, time.Time{}, fmt.Errorf("token expired")
-	}
-
 	return userID, expiresAt, nil
 }
 
 func (r *AuthRepo) DeleteRefreshToken(ctx context.Context, token string) error {
 	_, err := r.db.Exec(DELETE_SPECIFIC_TOKEN, token)
 	return err
+}
+
+func (r *AuthRepo) GetUserById(ctx context.Context, userID int) (*models.User, error) {
+	var user models.User
+	err := r.db.QueryRow(SELECT_USER, userID).Scan(&user.ID, &user.Email, &user.Password, &user.CreatedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fmt.Errorf("no user found")
+		}
+		return nil, err
+	}
+	return &user, nil
+
 }

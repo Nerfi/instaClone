@@ -91,3 +91,29 @@ func (svc *AuthSrv) Profile(ctx context.Context, userId int) (*models.User, erro
 	}
 	return usr, nil
 }
+
+func (svc *AuthSrv) CheckRefreshTokenValid(ctx context.Context, token string) (*models.TokenResponse, error) {
+
+	userId, expiresAt, err := svc.authrepo.GetRefreshToken(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	if time.Now().After(expiresAt) {
+		return nil, fmt.Errorf("refresh token expired")
+	}
+
+	// buscamos al usuario para llamar al metodo que crea los tokens y los devuelve
+	fullUser, err := svc.authrepo.GetUserById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	// generar los nuevos tokens de acceso y refresco
+	tokens, err := jwt.GetAuthTokens(fullUser, svc.auth)
+	if err != nil {
+		return nil, err
+	}
+
+	// generar nuevos tokens y devolverlos al handler
+	return tokens, nil
+}

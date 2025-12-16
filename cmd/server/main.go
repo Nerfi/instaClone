@@ -48,6 +48,7 @@ func main() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/create", authHandlers.CreateUser)
 	mux.HandleFunc("/login", authHandlers.LoginUser)
+	mux.HandleFunc("/refresh", authHandlers.RefreshToken)
 	mux.Handle("/logout", middlewares.AuthMiddleware(http.HandlerFunc(authHandlers.LogoutUser)))
 
 	// healthCheck endpoint

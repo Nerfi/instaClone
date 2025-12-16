@@ -69,7 +69,7 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		Path:     "/",
+		Path:     "/auth/refresh",
 		MaxAge:   604800, // 7 días
 	})
 	// seteamos el access token en las cookies tambien
@@ -79,7 +79,7 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-		Path:     "/auth/refresh",
+		Path:     "/",
 		MaxAge:   900, // 15 minutos
 	})
 
@@ -150,5 +150,56 @@ func (h *AuthHanlders) Profile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(usrPfl)
+
+}
+
+// RefreshToken handles the token refresh process for authenticated users.
+// It retrieves the JWT cookie from the request, validates it, and generates new access and refresh tokens.
+// If the JWT cookie is missing or invalid, it responds with an unauthorized status.
+// If the token generation is successful, it sets the new refresh token in the cookie and responds with the new access token.
+
+// @param w http.ResponseWriter - the response writer to send the response
+// @param r *http.Request - the incoming HTTP request containing the JWT cookie
+
+func (h *AuthHanlders) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	cookie, err := r.Cookie("refresh_token")
+	if err != nil || cookie.Value == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	tokenValue := cookie.Value
+	newUsrTokens, err := h.authservice.CheckRefreshTokenValid(r.Context(), tokenValue)
+	if err != nil {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// seteamos de nuevo los tokens en las cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    newUsrTokens.AccessToken,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/",
+		MaxAge:   900, // 15 minutos
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    newUsrTokens.RefreshToken,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		Path:     "/auth/refresh",
+		MaxAge:   604800, // 7 días
+	})
+
+	// response si todo ha ido bien
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"message": "tokens refreshed successfully",
+	})
 
 }
