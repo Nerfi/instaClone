@@ -9,6 +9,7 @@ import (
 	ResModels "github.com/Nerfi/instaClone/internal/models"
 	"github.com/Nerfi/instaClone/internal/models/authUser"
 	authsrvc "github.com/Nerfi/instaClone/internal/services/auth"
+	validation "github.com/Nerfi/instaClone/pkg/validator"
 	"github.com/gorilla/csrf"
 )
 
@@ -32,6 +33,12 @@ func (h *AuthHanlders) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// validando el req body
+	if err := validation.ValidateReqAuthBody(*bodyReq); err != nil {
+		ResModels.ResponseWithJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
 	// llamar al servicio
 	user, err := h.authservice.CreteUser(r.Context(), bodyReq)
 
@@ -48,14 +55,20 @@ func (h *AuthHanlders) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
-	var bodyReq *models.AuthReqBody
+	var bodyReq models.AuthReqBody
 	if err := json.NewDecoder(r.Body).Decode(&bodyReq); err != nil {
 		ResModels.ResponseWithJSON(w, http.StatusBadRequest, "please provide valid input ")
 
 		return
 	}
 
-	tokens, err := h.authservice.LoginUser(r.Context(), bodyReq)
+	// validation user input
+	if err := validation.ValidateReqAuthBody(bodyReq); err != nil {
+		ResModels.ResponseWithJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	tokens, err := h.authservice.LoginUser(r.Context(), &bodyReq)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

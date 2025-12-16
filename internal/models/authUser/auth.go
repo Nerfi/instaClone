@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	ID        int       `json:"id"`
@@ -9,8 +11,8 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 type AuthReqBody struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=72"`
 }
 
 type TokenResponse struct {
@@ -19,7 +21,7 @@ type TokenResponse struct {
 }
 
 type UserResponse struct {
-	ID        int       `json:"id"`
-	Email     string    `json:"email"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int       `json:"id" validate:"required,gt=0"`
+	Email     string    `json:"email" validate:"required,email"`
+	CreatedAt time.Time `json:"created_at" validate:"required"`
 }

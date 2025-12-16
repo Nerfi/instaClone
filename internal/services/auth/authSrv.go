@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	resModel "github.com/Nerfi/instaClone/internal/models"
@@ -10,6 +11,7 @@ import (
 	authRepo "github.com/Nerfi/instaClone/internal/repository/authRepo"
 	jwt "github.com/Nerfi/instaClone/pkg/jwt"
 	"github.com/Nerfi/instaClone/pkg/security"
+	validator "github.com/Nerfi/instaClone/pkg/validator"
 	"github.com/go-chi/jwtauth/v5"
 )
 
@@ -23,7 +25,12 @@ func NewAuthSrv(repo *authRepo.AuthRepo, auth *jwtauth.JWTAuth) *AuthSrv {
 }
 
 func (svc *AuthSrv) CreteUser(ctx context.Context, body *models.AuthReqBody) (*models.User, error) {
-	// hash de la contraseña antes de guardar el usuario
+	// validamos el input antes de hacer nada o continuar
+	if msg := validator.ValidateReqAuthBody(*body); msg != nil {
+		return nil, fmt.Errorf(strings.Join(msg, ", "))
+	}
+
+	// hash de la contraseña antes de guardar el usuario tambien comprobamos la longitud y otras caracteristicas de la password
 	hashPassword, err := security.HashPassword(body.Password)
 	if err != nil {
 		return nil, err
@@ -45,6 +52,11 @@ func (svc *AuthSrv) CreteUser(ctx context.Context, body *models.AuthReqBody) (*m
 }
 
 func (svc *AuthSrv) LoginUser(ctx context.Context, body *models.AuthReqBody) (*models.TokenResponse, error) {
+
+	// validamos los datos enviados por el usuario
+	if msg := validator.ValidateReqAuthBody(*body); msg != nil {
+		return nil, fmt.Errorf(strings.Join(msg, ", "))
+	}
 	// 1 buscar usuario en bbdd
 	dbUser, err := svc.authrepo.GetUserByEmail(ctx, body.Email)
 	if err != nil {
