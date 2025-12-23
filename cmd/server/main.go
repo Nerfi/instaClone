@@ -73,6 +73,8 @@ func main() {
 
 	// POSTS routes
 	mux.HandleFunc("/posts", postsHandlers.GetPosts)
+	// tiene que estar protegido
+	mux.Handle("/post/create", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.PostPost)))
 
 	//securing headers in all requests coming through this router
 

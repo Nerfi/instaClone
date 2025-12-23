@@ -10,6 +10,7 @@ import (
 
 const (
 	SELECT_POSTS = "SELECT * FROM posts"
+	CREATE_POST  = "INSERT INTO posts(user_id, caption, image_url) VALUES(?, ?, ?)"
 )
 
 type PostsRepo struct {
@@ -47,4 +48,22 @@ func (r *PostsRepo) GetPosts(ctx context.Context) ([]*models.Posts, error) {
 
 	return posts, nil
 
+}
+
+func (r *PostsRepo) CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error) {
+	result, err := r.db.Exec(CREATE_POST, ctx.Value("user_id"), post.Caption, post.Image_url)
+	if err != nil {
+		return nil, fmt.Errorf("db error creating post &w", err)
+	}
+	returnedPost := &models.Posts{
+		USER_ID:   ctx.Value("user_id").(int),
+		Caption:   post.Caption,
+		Image_url: post.Image_url,
+	}
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+	returnedPost.ID = int(lastID)
+	return returnedPost, nil
 }

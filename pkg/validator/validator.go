@@ -3,13 +3,12 @@ package validator
 import (
 	"fmt"
 
-	"github.com/Nerfi/instaClone/internal/models/authUser"
 	"github.com/go-playground/validator/v10"
 )
 
 var validate = validator.New()
 
-func ValidateReqAuthBody(body models.AuthReqBody) []string {
+func ValidateReqAuthBody[T any](body T) []string {
 	if err := validate.Struct(body); err != nil {
 		errs := err.(validator.ValidationErrors)
 		var msg []string
