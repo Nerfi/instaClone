@@ -29,7 +29,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE} #nombre de la bbdd que se creara
     volumes:
       - db_data:/var/lib/mysql #aqui se guardan los datos que generamos de bbdd
-      - ./migrations:/docker-entrypoint-initdb.d
+     # - ./migrations:/docker-entrypoint-initdb.d
 
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
