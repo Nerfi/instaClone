@@ -13,8 +13,11 @@ import (
 	authHndlr "github.com/Nerfi/instaClone/internal/handlers/auth"
 	health "github.com/Nerfi/instaClone/internal/handlers/healthCheck"
 	"github.com/Nerfi/instaClone/internal/handlers/middlewares"
+	postsHndlr "github.com/Nerfi/instaClone/internal/handlers/posts"
 	authRepo "github.com/Nerfi/instaClone/internal/repository/authRepo"
+	postsRepo "github.com/Nerfi/instaClone/internal/repository/posts"
 	authSrv "github.com/Nerfi/instaClone/internal/services/auth"
+	postsSrv "github.com/Nerfi/instaClone/internal/services/posts"
 	"github.com/joho/godotenv"
 )
 
@@ -39,11 +42,15 @@ func main() {
 	cfg := config.NewAppConfig()
 	// 2 init repo
 	authRepo := authRepo.NewAuthRepo(cfg.DB)
+
+	postsRepository := postsRepo.NewPostsRepo(cfg.DB)
 	// 3 init service
 	authSrv := authSrv.NewAuthSrv(authRepo, cfg.Auth)
+	postsService := postsSrv.NewPostsSrv(postsRepository)
 
 	//4 init handlers
 	authHandlers := authHndlr.NewAuthHanlders(authSrv)
+	postsHandlers := postsHndlr.NewPostsHanlders(postsService)
 	// 5 register routes
 	mux := http.NewServeMux()
 	mux.HandleFunc("/create", authHandlers.CreateUser)
@@ -63,6 +70,9 @@ func main() {
 	chain := middlewares.ChainMiddleware(middlewares.AuthMiddleware, middlewares.OwnerOnlyMiddleware)
 	// rutas protegidas
 	mux.Handle("/profile/{id}", chain(http.HandlerFunc(authHandlers.Profile)))
+
+	// POSTS routes
+	mux.HandleFunc("/posts", postsHandlers.GetPosts)
 
 	//securing headers in all requests coming through this router
 

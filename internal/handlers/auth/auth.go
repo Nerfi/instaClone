@@ -102,7 +102,6 @@ func (h *AuthHanlders) LoginUser(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHanlders) LogoutUser(w http.ResponseWriter, r *http.Request) {
 	// extraer el id del usuario del context
 	userId, ok := usrMiddle.GetUserIdFromContext(r.Context())
-	fmt.Println("user id", userId)
 	if !ok {
 		http.Error(w, "no user found", http.StatusUnauthorized)
 		return

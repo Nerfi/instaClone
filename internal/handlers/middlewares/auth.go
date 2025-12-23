@@ -48,6 +48,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 func OwnerOnlyMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// cogemos el id del usuario que esta en el context /logueado
 		userId, ok := GetUserIdFromContext(r.Context())
 		if !ok {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
