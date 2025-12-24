@@ -9,8 +9,10 @@ import (
 )
 
 const (
-	SELECT_POSTS = "SELECT * FROM posts"
-	CREATE_POST  = "INSERT INTO posts(user_id, caption, image_url) VALUES(?, ?, ?)"
+	SELECT_POSTS        = "SELECT * FROM posts"
+	CREATE_POST         = "INSERT INTO posts(user_id, caption, image_url) VALUES(?, ?, ?)"
+	DELETE_POST_BY_ID   = "DELETE FROM posts WHERE id = ?"
+	CHECK_OWNER_OS_POST = "SELECT user_id FROM posts WHERE id = ?"
 )
 
 type PostsRepo struct {
@@ -66,4 +68,26 @@ func (r *PostsRepo) CreatePost(ctx context.Context, post *models.PostsReqBody) (
 	}
 	returnedPost.ID = int(lastID)
 	return returnedPost, nil
+}
+
+func (r *PostsRepo) DeletePost(ctx context.Context, id int) error {
+	result, err := r.db.Exec(DELETE_POST_BY_ID, id)
+	if err != nil {
+		return err
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		return fmt.Errorf("no post found with id %d", id)
+	}
+
+	return nil
+}
+
+func (r *PostsRepo) GetPostOwner(ctx context.Context, id int) (int, error) {
+	var ownerId int
+	err := r.db.QueryRow(CHECK_OWNER_OS_POST, id).Scan(&ownerId)
+	if err != nil {
+		return 0, err
+	}
+	return ownerId, nil
 }

@@ -1,12 +1,16 @@
 package posts
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
+	"net/http"
+	"strconv"
+
 	ResModels "github.com/Nerfi/instaClone/internal/models"
 	models "github.com/Nerfi/instaClone/internal/models/posts"
 	repoSrv "github.com/Nerfi/instaClone/internal/services/posts"
 	validator "github.com/Nerfi/instaClone/pkg/validator"
-	"net/http"
 )
 
 type PostsHanlder struct {
@@ -48,7 +52,7 @@ func (h *PostsHanlder) PostPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// llamar al servicio si todo o
+	// llamar al servicio si todo ok
 
 	post, err := h.postService.CreatePost(r.Context(), &postBody)
 	if err != nil {
@@ -56,5 +60,41 @@ func (h *PostsHanlder) PostPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ResModels.ResponseWithJSON(w, http.StatusCreated, post)
+
+}
+
+func (h *PostsHanlder) DeletePost(w http.ResponseWriter, r *http.Request) {
+	// extract the param selected and check if we can do such action
+	// only owner of the post should delete it
+	idStr := r.PathValue("id")
+	//convert into int
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.postService.DeletePost(r.Context(), id)
+	if err != nil {
+
+		if err.Error() == "unauthorized" {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+		if err.Error() == "Forbidden" {
+			http.Error(w, "forbidden", http.StatusForbidden)
+			return
+		}
+
+		if errors.Is(err, sql.ErrNoRows) {
+			http.Error(w, "post not found", http.StatusNotFound)
+			return
+		}
+
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 
 }
