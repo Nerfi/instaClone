@@ -26,6 +26,14 @@
  .env
  .env*
 
- # Editor/IDE
- # .idea/
- # .vscode/
+ # Golang IDE
+ .idea/
+ *.swp
+ *.swo
+ *~
+ .DS_Store
+
+ # Temporary files
+ tmp/
+ temp/
+ *.tmp
