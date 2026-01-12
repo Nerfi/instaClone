@@ -14,6 +14,7 @@ type PostsService interface {
 	GetPosts() ([]*models.Posts, error)
 	CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error)
 	DeletePost(ctx context.Context, id int) error
+	GetPostByID(ctx context.Context, id int) (*models.Posts, error)
 }
 
 // no usar punteros a interfaces, como regla simple
@@ -34,6 +35,15 @@ func (svc *PostsSrv) GetPosts() ([]*models.Posts, error) {
 
 	return posts, nil
 
+}
+
+func (svc *PostsSrv) GetPostByID(ctx context.Context, id int) (*models.Posts, error) {
+	post, err := svc.postsrepo.GetPostByID(context.Background(), id)
+	if err != nil {
+		return nil, err
+	}
+
+	return post, nil
 }
 
 func (svc *PostsSrv) CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error) {

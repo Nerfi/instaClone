@@ -34,13 +34,39 @@ func (h *PostsHanlder) GetPosts(w http.ResponseWriter, r *http.Request) {
 	ResModels.ResponseWithJSON(w, http.StatusOK, posts)
 }
 
+func (h *PostsHanlder) GetPost(w http.ResponseWriter, r *http.Request) {
+	//extrac the id from the request
+	id := r.PathValue("id")
+
+	//convert into int
+	idCnvt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//llamamos al servicio
+	post, err := h.postService.GetPostByID(r.Context(), idCnvt)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	//enviamos post si todo esta ok
+	ResModels.ResponseWithJSON(w, http.StatusOK, post)
+
+}
+
 func (h *PostsHanlder) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
 	var postBody models.PostsReqBody
+	// adding decoder for unknow fields
+	dec := json.NewDecoder(r.Body)
+	dec.DisallowUnknownFields()
 
-	if err := json.NewDecoder(r.Body).Decode(&postBody); err != nil {
+	if err := dec.Decode(&postBody); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

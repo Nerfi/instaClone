@@ -13,10 +13,12 @@ const (
 	CREATE_POST         = "INSERT INTO posts(user_id, caption, image_url) VALUES(?, ?, ?)"
 	DELETE_POST_BY_ID   = "DELETE FROM posts WHERE id = ?"
 	CHECK_OWNER_OS_POST = "SELECT user_id FROM posts WHERE id = ?"
+	GET_SINGLE_POST     = "SELECT * FROM posts WHERE id = ?"
 )
 
 type PostsRepository interface {
 	GetPosts(ctx context.Context) ([]*models.Posts, error)
+	GetPostByID(ctx context.Context, id int) (*models.Posts, error)
 	CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error)
 	DeletePost(ctx context.Context, id int) error
 	GetPostOwner(ctx context.Context, id int) (int, error)
@@ -56,6 +58,16 @@ func (r *PostsRepo) GetPosts(ctx context.Context) ([]*models.Posts, error) {
 	}
 
 	return posts, nil
+
+}
+
+func (r *PostsRepo) GetPostByID(ctx context.Context, id int) (*models.Posts, error) {
+	var p models.Posts
+	err := r.db.QueryRow(GET_SINGLE_POST, id).Scan(&p.ID, &p.USER_ID, &p.Caption, &p.Image_url, &p.CreatedAt, &p.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("error getting single post: %w", err)
+	}
+	return &p, nil
 
 }
 

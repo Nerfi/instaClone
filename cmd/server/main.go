@@ -76,7 +76,10 @@ func main() {
 	// tiene que estar protegido
 	mux.Handle("/post/create", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.CreatePost)))
 	//delete endpoint, should be secure
-	mux.Handle("/post/{id}", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.DeletePost)))
+	mux.Handle("/posts/{id}", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.DeletePost)))
+
+	// get single post, not sure if this one needs auth
+	mux.Handle("/post/{id}", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.GetPost)))
 
 	//securing headers in all requests coming through this router
 
