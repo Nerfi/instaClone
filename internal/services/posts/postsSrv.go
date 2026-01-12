@@ -9,11 +9,19 @@ import (
 	repo "github.com/Nerfi/instaClone/internal/repository/posts"
 )
 
-type PostsSrv struct {
-	postsrepo *repo.PostsRepo
+type PostsService interface {
+	// add ctx a este metodo
+	GetPosts() ([]*models.Posts, error)
+	CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error)
+	DeletePost(ctx context.Context, id int) error
 }
 
-func NewPostsSrv(repo *repo.PostsRepo) *PostsSrv {
+// no usar punteros a interfaces, como regla simple
+type PostsSrv struct {
+	postsrepo repo.PostsRepository
+}
+
+func NewPostsSrv(repo repo.PostsRepository) *PostsSrv {
 	return &PostsSrv{postsrepo: repo}
 }
 

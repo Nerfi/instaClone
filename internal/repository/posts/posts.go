@@ -15,6 +15,13 @@ const (
 	CHECK_OWNER_OS_POST = "SELECT user_id FROM posts WHERE id = ?"
 )
 
+type PostsRepository interface {
+	GetPosts(ctx context.Context) ([]*models.Posts, error)
+	CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error)
+	DeletePost(ctx context.Context, id int) error
+	GetPostOwner(ctx context.Context, id int) (int, error)
+}
+
 type PostsRepo struct {
 	db *sql.DB
 }

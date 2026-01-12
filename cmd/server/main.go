@@ -74,7 +74,7 @@ func main() {
 	// POSTS routes
 	mux.HandleFunc("/posts", postsHandlers.GetPosts)
 	// tiene que estar protegido
-	mux.Handle("/post/create", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.PostPost)))
+	mux.Handle("/post/create", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.CreatePost)))
 	//delete endpoint, should be secure
 	mux.Handle("/post/{id}", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.DeletePost)))
 

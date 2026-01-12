@@ -14,10 +14,10 @@ import (
 )
 
 type PostsHanlder struct {
-	postService *repoSrv.PostsSrv
+	postService repoSrv.PostsService
 }
 
-func NewPostsHanlders(service *repoSrv.PostsSrv) *PostsHanlder {
+func NewPostsHanlders(service repoSrv.PostsService) *PostsHanlder {
 	return &PostsHanlder{
 		postService: service,
 	}
@@ -34,7 +34,7 @@ func (h *PostsHanlder) GetPosts(w http.ResponseWriter, r *http.Request) {
 	ResModels.ResponseWithJSON(w, http.StatusOK, posts)
 }
 
-func (h *PostsHanlder) PostPost(w http.ResponseWriter, r *http.Request) {
+func (h *PostsHanlder) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
