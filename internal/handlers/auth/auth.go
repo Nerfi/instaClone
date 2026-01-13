@@ -2,7 +2,6 @@ package auth
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	usrMiddle "github.com/Nerfi/instaClone/internal/handlers/middlewares"
@@ -145,7 +144,6 @@ func (h *AuthHanlders) Profile(w http.ResponseWriter, r *http.Request) {
 	}
 	// hablamos con el servicio para extraer los datos del usuario
 	usrPfl, err := h.authservice.Profile(r.Context(), userId)
-	fmt.Println("user profile", usrPfl) // nil
 	if err != nil {
 		http.Error(w, "user not found", http.StatusNotFound)
 		return
@@ -199,5 +197,23 @@ func (h *AuthHanlders) RefreshToken(w http.ResponseWriter, r *http.Request) {
 
 	// response si todo ha ido bien
 	ResModels.ResponseWithJSON(w, http.StatusOK, "tokens refreshed successfully")
+
+}
+
+// forgot password function
+// debemos recibir el email enviado y buscar si ese usuario existe en nuestro sistema
+// debemos generar token si el usuario existe
+// guardar el token y enviar el email con el link
+func (h *AuthHanlders) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	// read the email sended and check if user exist in DB
+	usrMail := r.FormValue("email")
+	// buscar el email en DB para saber si existe el usuario
+	uchgnusrc, err := h.authservice.FindUserByEmail(r.Context(), usrMail)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	ResModels.ResponseWithJSON(w, http.StatusOK, uchgnusrc)
 
 }

@@ -48,7 +48,7 @@ func GetAuthTokens(user *models.User, auth *jwtauth.JWTAuth) (*models.TokenRespo
 	if err != nil {
 		return nil, err
 	}
-	
+
 	return &models.TokenResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -75,7 +75,6 @@ func ValidateToken(tokenStr string, auth *jwtauth.JWTAuth) (*UserClaims, error) 
 
 	// extraer el user_id de los claims
 	claims, err := token.AsMap(context.Background())
-	fmt.Println(claims, "CLAIMS ")
 	if err != nil {
 		return nil, fmt.Errorf("error extraendo los claims: %w", err)
 	}

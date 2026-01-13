@@ -25,3 +25,8 @@ type UserResponse struct {
 	Email     string    `json:"email" validate:"required,email"`
 	CreatedAt time.Time `json:"created_at" validate:"required"`
 }
+
+type ChangePasswordUser struct {
+	ID    int    `json:"id"`
+	Email string `json:"email"`
+}

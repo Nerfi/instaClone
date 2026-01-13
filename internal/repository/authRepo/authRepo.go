@@ -19,7 +19,10 @@ const (
 	DELETE_TOKEN_REFRESH_TABLE = "DELETE FROM refresh_tokens_table WHERE user_id = ?"
 	FIND_REFRESH_TOKEN         = "SELECT user_id, expires_at FROM refresh_tokens_table WHERE token = ?"
 	DELETE_SPECIFIC_TOKEN      = "DELETE FROM refresh_tokens_table WHERE token = ?"
+	FIND_USER_BY_EMAIL         = "SELECT id, email FROM users WHERE EMail = ?"
 )
+
+//TODO: create interface para repo y servicio
 
 type AuthRepo struct {
 	db *sql.DB
@@ -133,4 +136,13 @@ func (r *AuthRepo) GetUserById(ctx context.Context, userID int) (*models.User, e
 	}
 	return &user, nil
 
+}
+
+func (r *AuthRepo) FindUserByEmail(ctx context.Context, email string) (*models.ChangePasswordUser, error) {
+	var usrcPssChng models.ChangePasswordUser
+	err := r.db.QueryRow(FIND_USER_BY_EMAIL, email).Scan(&usrcPssChng.ID, &usrcPssChng.Email)
+	if err != nil {
+		return nil, err
+	}
+	return &usrcPssChng, nil
 }

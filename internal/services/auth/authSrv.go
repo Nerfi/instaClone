@@ -20,6 +20,8 @@ type AuthSrv struct {
 	auth     *jwtauth.JWTAuth
 }
 
+//TODO: create interface for service and repo
+
 func NewAuthSrv(repo *authRepo.AuthRepo, auth *jwtauth.JWTAuth) *AuthSrv {
 	return &AuthSrv{authrepo: repo, auth: auth}
 }
@@ -128,4 +130,13 @@ func (svc *AuthSrv) CheckRefreshTokenValid(ctx context.Context, token string) (*
 
 	// generar nuevos tokens y devolverlos al handler
 	return tokens, nil
+}
+
+func (svc *AuthSrv) FindUserByEmail(ctx context.Context, email string) (*models.ChangePasswordUser, error) {
+	crrntUsr, err := svc.authrepo.FindUserByEmail(ctx, email)
+	if err != nil {
+		return nil, err
+	}
+
+	return crrntUsr, nil
 }

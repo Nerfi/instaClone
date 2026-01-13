@@ -57,6 +57,7 @@ func main() {
 	mux.HandleFunc("/login", authHandlers.LoginUser)
 	mux.HandleFunc("/refresh", authHandlers.RefreshToken)
 	mux.Handle("/logout", middlewares.AuthMiddleware(http.HandlerFunc(authHandlers.LogoutUser)))
+	mux.Handle("/forgot-password", middlewares.AuthMiddleware(http.HandlerFunc(authHandlers.ForgotPassword)))
 
 	// healthCheck endpoint
 	hc := health.NewHealthCheck()
