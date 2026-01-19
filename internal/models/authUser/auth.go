@@ -30,3 +30,10 @@ type ChangePasswordUser struct {
 	ID    int    `json:"id"`
 	Email string `json:"email"`
 }
+
+//reset password struct
+
+type ResetPasswordRequest struct {
+	Token       string `json:"token" validate:"required"`
+	NewPassword string `json:"new_password" validate:"required"`
+}

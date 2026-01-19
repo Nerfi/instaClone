@@ -1,0 +1,1 @@
+[password_reset_flow.mermaid](../../../Descargas/password_reset_flow.mermaid)

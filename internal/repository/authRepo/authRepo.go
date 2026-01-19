@@ -19,7 +19,7 @@ const (
 	DELETE_TOKEN_REFRESH_TABLE = "DELETE FROM refresh_tokens_table WHERE user_id = ?"
 	FIND_REFRESH_TOKEN         = "SELECT user_id, expires_at FROM refresh_tokens_table WHERE token = ?"
 	DELETE_SPECIFIC_TOKEN      = "DELETE FROM refresh_tokens_table WHERE token = ?"
-	FIND_USER_BY_EMAIL         = "SELECT id, email FROM users WHERE EMail = ?"
+	FIND_USER_BY_EMAIL         = "SELECT * FROM users WHERE EMail = ?"
 )
 
 //TODO: create interface para repo y servicio
@@ -138,11 +138,91 @@ func (r *AuthRepo) GetUserById(ctx context.Context, userID int) (*models.User, e
 
 }
 
-func (r *AuthRepo) FindUserByEmail(ctx context.Context, email string) (*models.ChangePasswordUser, error) {
-	var usrcPssChng models.ChangePasswordUser
-	err := r.db.QueryRow(FIND_USER_BY_EMAIL, email).Scan(&usrcPssChng.ID, &usrcPssChng.Email)
+func (r *AuthRepo) FindUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	var usrcPssChng models.User
+	err := r.db.QueryRow(FIND_USER_BY_EMAIL, email).Scan(&usrcPssChng.ID, &usrcPssChng.Email, &usrcPssChng.Password, &usrcPssChng.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 	return &usrcPssChng, nil
+}
+
+func (r *AuthRepo) SavePasswordResetToken(ctx context.Context, userID int, tokenHash string, expiresAt time.Time) error {
+	// primero invalidamos los tokens anteriores del usuario
+	_, err := r.db.Exec(
+		"UPDATE password_resets SET used = TRUE WHERE user_id = ? AND used = FALSE",
+		userID)
+
+	if err != nil {
+		return err
+	}
+
+	// insertamos el nuevo token
+	_, err = r.db.Exec(
+		`INSERT INTO password_resets (user_id, token_hash, expires_at) 
+         VALUES (?, ?, ?)`,
+		userID, tokenHash, expiresAt,
+	)
+
+	return err
+}
+
+// 1- validar el token y obtener el user_id
+func (r *AuthRepo) ValidateResetToken(ctx context.Context, tokenHash string) (int, error) {
+	var userID int
+	var expiresAt time.Time
+	var used bool
+
+	//buscamos el token en la base de datos
+	err := r.db.QueryRow(`SELECT user_id, expires_at, used 
+         FROM password_resets 
+         WHERE token_hash = ?`,
+		tokenHash).Scan(&userID, &expiresAt, &used)
+
+	if err == sql.ErrNoRows {
+		return 0, fmt.Errorf("no token found")
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	// verificamos si ya fue useado el token
+
+	if used {
+		return 0, fmt.Errorf("token already used")
+	}
+
+	// verificamos si expiro
+	if time.Now().After(expiresAt) {
+		return 0, fmt.Errorf("token expired")
+	}
+
+	return userID, nil
+
+}
+
+// 2 - Actualizar la contraseña del usuario en cuestion
+
+func (r *AuthRepo) UpdateUserPassword(ctx context.Context, userID int, hashedPassword string) error {
+	result, err := r.db.Exec("UPDATE users SET password = ? WHERE id = ?",
+		hashedPassword, userID)
+	if err != nil {
+		return err
+	}
+
+	// verificar que se actualizo al menos una fila, todo fue ok si se actualizo al menos una fila
+	//RowsAffected returns the number of rows affected by an update, insert, or delete
+	rowsAffected, err := result.RowsAffected()
+	if rowsAffected == 0 || err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 3 - Marcar el token como usado
+func (r *AuthRepo) MarkTokenAsUsed(ctx context.Context, tokenHash string) error {
+	_, err := r.db.Exec("UPDATE password_resets SET used = TRUE WHERE token_hash = ?",
+		tokenHash)
+	return err
 }
