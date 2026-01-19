@@ -132,11 +132,27 @@ func (svc *AuthSrv) CheckRefreshTokenValid(ctx context.Context, token string) (*
 	return tokens, nil
 }
 
-func (svc *AuthSrv) FindUserByEmail(ctx context.Context, email string) (*models.ChangePasswordUser, error) {
+func (svc *AuthSrv) FindUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	crrntUsr, err := svc.authrepo.FindUserByEmail(ctx, email)
 	if err != nil {
 		return nil, err
 	}
 
 	return crrntUsr, nil
+}
+
+func (svc *AuthSrv) SavePasswordResetToken(ctx context.Context, userID int, tokenHash string, expiresAt time.Time) error {
+	return svc.authrepo.SavePasswordResetToken(ctx, userID, tokenHash, expiresAt)
+}
+
+func (svc *AuthSrv) ValidateResetToken(ctx context.Context, tokenHash string) (int, error) {
+	return svc.authrepo.ValidateResetToken(ctx, tokenHash)
+}
+
+func (svc *AuthSrv) UpdateUserPassword(ctx context.Context, userID int, hashedPassword string) error {
+	return svc.authrepo.UpdateUserPassword(ctx, userID, hashedPassword)
+}
+
+func (svc *AuthSrv) MarkTokenAsUsed(ctx context.Context, tokenHash string) error {
+	return svc.authrepo.MarkTokenAsUsed(ctx, tokenHash)
 }
