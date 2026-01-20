@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	middleware "github.com/Nerfi/instaClone/internal/handlers/middlewares"
 	models "github.com/Nerfi/instaClone/internal/models/posts"
@@ -15,6 +16,7 @@ type PostsService interface {
 	CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error)
 	DeletePost(ctx context.Context, id int) error
 	GetPostByID(ctx context.Context, id int) (*models.Posts, error)
+	UpdatePost(ctx context.Context, id int, updateData *models.PostsReqBody) (*models.Posts, error)
 }
 
 // no usar punteros a interfaces, como regla simple
@@ -38,7 +40,7 @@ func (svc *PostsSrv) GetPosts() ([]*models.Posts, error) {
 }
 
 func (svc *PostsSrv) GetPostByID(ctx context.Context, id int) (*models.Posts, error) {
-	post, err := svc.postsrepo.GetPostByID(context.Background(), id)
+	post, err := svc.postsrepo.GetPostByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -71,5 +73,41 @@ func (svc *PostsSrv) DeletePost(ctx context.Context, id int) error {
 	}
 
 	return svc.postsrepo.DeletePost(ctx, id)
+
+}
+
+func (svc *PostsSrv) UpdatePost(ctx context.Context, id int, updateData *models.PostsReqBody) (*models.Posts, error) {
+	// 1 verificar que existe el post que queremos
+	pst, err := svc.postsrepo.GetPostByID(ctx, id)
+	usrIDCtx := ctx.Value("user_id").(int)
+	if err != nil {
+		fmt.Println("Error getting post, or does not exist")
+		return nil, err
+	}
+
+	// verificar que el usuario este autorizado para ejecer esta accion
+	usrId := pst.USER_ID
+	if usrId != usrIDCtx {
+		return nil, errors.New("Forbidden, user can not perform this operation")
+	}
+
+	// 2 actualizar el post de la base de datos
+	rowsAffected, err := svc.postsrepo.UpdatePost(ctx, id, updateData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rowsAffected == 0 {
+		return nil, fmt.Errorf("pot not found")
+	}
+
+	// 3 obtener el post actualizado para devolverlo
+	updatePost, err := svc.postsrepo.GetPostByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return updatePost, nil
 
 }

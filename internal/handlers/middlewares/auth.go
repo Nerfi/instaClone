@@ -64,8 +64,9 @@ func OwnerOnlyMiddleware(next http.Handler) http.Handler {
 		}
 
 		// check validation para que el usuario acceda a sus propios datos
+
 		if userId != requestUserID {
-			http.Error(w, "unauthorized", http.StatusForbidden)
+			http.Error(w, "unauthorized from ids", http.StatusForbidden)
 			return
 		}
 

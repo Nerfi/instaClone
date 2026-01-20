@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -123,4 +124,45 @@ func (h *PostsHanlder) DeletePost(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusNoContent)
 
+}
+
+func (h *PostsHanlder) UpdatePost(w http.ResponseWriter, r *http.Request) {
+	// extract the id of the selected post to update
+	id := r.PathValue("id")
+	idCnvt, err := strconv.Atoi(id)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	// 2. Parsear el body con los nuevos datos
+	var updateData models.PostsReqBody
+	// 3. validar los datos
+	dec := json.NewDecoder(r.Body)
+	// esto lo hacemos por si nos intentan enviar field en la request que no tenemos definidas no entren y salte error
+	dec.DisallowUnknownFields()
+
+	if err := dec.Decode(&updateData); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// validate user input data
+	// todo rename this function - ValidateReqAuthBody
+	if err := validator.ValidateReqAuthBody(updateData); err != nil {
+		ResModels.ResponseWithJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	// 4 llamamos al servicio pasando el ID y los datos que queremos actualizar, los que vienen en la request
+
+	post, err := h.postService.UpdatePost(r.Context(), idCnvt, &updateData)
+
+	if err != nil {
+		fmt.Println(err.Error(), "el error a la llamada del servicio con los datos que queremos actualizar y el id del elemento")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// devolvemos el post actualizado en la respuesta
+	ResModels.ResponseWithJSON(w, http.StatusOK, post)
 }

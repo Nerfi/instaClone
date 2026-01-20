@@ -14,6 +14,7 @@ const (
 	DELETE_POST_BY_ID   = "DELETE FROM posts WHERE id = ?"
 	CHECK_OWNER_OS_POST = "SELECT user_id FROM posts WHERE id = ?"
 	GET_SINGLE_POST     = "SELECT * FROM posts WHERE id = ?"
+	UPDATE_POST         = "UPDATE posts SET caption = ?, image_url = ?, updated_at = NOW() WHERE id = ?"
 )
 
 type PostsRepository interface {
@@ -22,6 +23,7 @@ type PostsRepository interface {
 	CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error)
 	DeletePost(ctx context.Context, id int) error
 	GetPostOwner(ctx context.Context, id int) (int, error)
+	UpdatePost(ctx context.Context, id int, post *models.PostsReqBody) (int64, error)
 }
 
 type PostsRepo struct {
@@ -34,7 +36,6 @@ func NewPostsRepo(db *sql.DB) *PostsRepo {
 
 func (r *PostsRepo) GetPosts(ctx context.Context) ([]*models.Posts, error) {
 	rows, err := r.db.Query(SELECT_POSTS)
-	fmt.Println(rows, "los posts que deberian de venirme ")
 	if err != nil {
 		return nil, fmt.Errorf("error getting posts: %w", err)
 	}
@@ -73,8 +74,11 @@ func (r *PostsRepo) GetPostByID(ctx context.Context, id int) (*models.Posts, err
 
 func (r *PostsRepo) CreatePost(ctx context.Context, post *models.PostsReqBody) (*models.Posts, error) {
 	result, err := r.db.Exec(CREATE_POST, ctx.Value("user_id"), post.Caption, post.Image_url)
+
+	fmt.Printf("USER ID IN CONTEXT: %#v\n", ctx.Value("user_id"))
+
 	if err != nil {
-		return nil, fmt.Errorf("db error creating post &w", err)
+		return nil, fmt.Errorf("db error creating post %w", err)
 	}
 	returnedPost := &models.Posts{
 		USER_ID:   ctx.Value("user_id").(int),
@@ -109,4 +113,19 @@ func (r *PostsRepo) GetPostOwner(ctx context.Context, id int) (int, error) {
 		return 0, err
 	}
 	return ownerId, nil
+}
+
+func (r *PostsRepo) UpdatePost(ctx context.Context, id int, post *models.PostsReqBody) (int64, error) {
+	result, err := r.db.Exec(UPDATE_POST, post.Caption, post.Image_url, id)
+	if err != nil {
+		return 0, err
+	}
+
+	// verificamos cuantas filas se actualizarion
+	// RowsAffected returns the number of rows affected by an update, insert, or delete.
+	rows, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	return rows, nil
 }

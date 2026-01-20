@@ -83,6 +83,9 @@ func main() {
 	// get single post, not sure if this one needs auth
 	mux.Handle("/post/{id}", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.GetPost)))
 
+	// update post, just owner should do it, this should be protected , user must be logged in and owner of the resource
+	mux.Handle("/update-post/{id}", middlewares.AuthMiddleware(http.HandlerFunc(postsHandlers.UpdatePost)))
+
 	//securing headers in all requests coming through this router
 
 	secureMux := middlewares.SecurityHeaders(mux)
